@@ -123,7 +123,7 @@ EOF
 
 		case "${CONFIG_FILE}" in
 		d-team_newifi-d2-Clash | xiaoyu_xy-c5-Clash)
-			ClashDL mipsle-hardfloat tun
+			ClashDL mipsle-hardfloat meta
 		;;
 		esac
 			
