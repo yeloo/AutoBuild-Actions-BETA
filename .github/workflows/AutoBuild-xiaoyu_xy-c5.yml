@@ -82,39 +82,58 @@ jobs:
 
     steps:
 
-    - name: "Optimize disk space"
-      if: env.DELETE_USELESS_FILES == 'true' && !cancelled()
-      uses: "hugoalh/disk-space-optimizer-ghaction@v0.8.1"
-      with:
-        operate_sudo: "True"
-        general_include: ".+"
-        general_exclude: |-
-          ^GCC$
-          ^G\+\+$
-          Clang
-          LLVM
-        docker_include: ".+"
-        docker_prune: "True"
-        docker_clean: "True"
-        apt_prune: "True"
-        apt_clean: "True"
-        homebrew_prune: "True"
-        homebrew_clean: "True"
-        npm_prune: "True"
-        npm_clean: "True"
-        os_swap: "True"
+- name: 深度清理磁盘空间
+  run: |
+    # 删除预装的大型软件（.NET、Android SDK、Haskell 等）
+    sudo rm -rf /usr/share/dotnet
+    sudo rm -rf /opt/ghc
+    sudo rm -rf /usr/local/share/boost
+    sudo rm -rf /var/cache/apt/archives/*.deb
+    sudo rm -rf /var/lib/apt/lists/*
+    sudo rm -rf /usr/local/lib/android
+    sudo rm -rf /opt/microsoft/powershell
+    sudo rm -rf /usr/share/swift
+    # 清理 Docker 镜像和缓存（释放大量空间）
+    sudo docker system prune -af
+    # 清理 swap 分区（如果存在）
+    sudo swapoff -a
+    sudo rm -f /swapfile
+    # 显示当前可用空间
+    df -h
 
-    - name: Free up disk space
-      if: env.DELETE_USELESS_FILES == 'true' && !cancelled()
-      uses: easimon/maximize-build-space@master
-      with: 
-        root-reserve-mb: 2048
-        swap-size-mb: 1
-        remove-dotnet: 'true'
-        remove-android: 'true'
-        remove-haskell: 'true'
-        remove-codeql: 'true'
-        remove-docker-images: 'true'
+# 第二步：使用工具进一步优化
+- name: 优化磁盘空间（工具辅助）
+  uses: hugoalh/disk-space-optimizer-ghaction@v0.8.1
+  with:
+    operate_sudo: "True"
+    general_include: ".+"
+    general_exclude: |-
+      ^GCC$
+      ^G\+\+$
+      Clang
+      LLVM
+    docker_include: ".+"
+    docker_prune: "True"
+    docker_clean: "True"
+    apt_prune: "True"
+    apt_clean: "True"
+    homebrew_prune: "True"
+    homebrew_clean: "True"
+    npm_prune: "True"
+    npm_clean: "True"
+    os_swap: "True"
+
+# 第三步：调整保留空间和 swap
+- name: 最大化构建空间
+  uses: easimon/maximize-build-space@master
+  with:
+    root-reserve-mb: 1024  # 只保留 1GB 根目录空间（默认保留更多）
+    swap-size-mb: 0        # 禁用 swap（节省空间，编译主要依赖内存）
+    remove-dotnet: 'true'
+    remove-android: 'true'
+    remove-haskell: 'true'
+    remove-codeql: 'true'
+    remove-docker-images: 'true'
 
     - name: Checkout
       uses: actions/checkout@main
