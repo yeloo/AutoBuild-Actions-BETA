@@ -80,24 +80,22 @@ jobs:
       pull-requests: write
       contents: write
 
-steps:
+    steps:
+      # 第一步：优先释放磁盘空间
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false  # 不清理工具缓存（避免影响基础编译工具）
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true  # 若无需 Docker 可保持 true
+          swap-storage: true
 
-     - name: Free Disk Space (Ubuntu)
-       uses: jlumbroso/free-disk-space@main
-       with:
-         # this might remove tools that are actually needed,
-         # if set to "true" but frees about 6 GB
-         tool-cache: false
-       
-         # all of these default to true, but feel free to set to
-         # "false" if necessary for your workflow
-         android: true
-         dotnet: true
-         haskell: true
-         large-packages: true
-         docker-images: true
-         swap-storage: true
-
+      # 后续步骤：检出代码、初始化环境等
+      - name: Checkout
+        uses: actions/checkout@main
       - name: Checkout
         uses: actions/checkout@main
         with:
